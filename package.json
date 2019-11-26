@@ -1,0 +1,25 @@
+{
+    "name": "poweron-vsc",
+    "displayName": "poweron-vsc",
+    "description": "PowerOn language support for Visual Studio Code",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.40.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "contributes": {
+        "languages": [{
+            "id": "poweron",
+            "aliases": ["PowerOn", "poweron"],
+            "extensions": [".po"],
+            "configuration": "./language-configuration.json"
+        }],
+        "grammars": [{
+            "language": "poweron",
+            "scopeName": "source.poweron",
+            "path": "./syntaxes/poweron.tmLanguage.json"
+        }]
+    }
+}

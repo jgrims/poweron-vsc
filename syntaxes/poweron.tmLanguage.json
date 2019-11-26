@@ -1,0 +1,78 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "PowerOn",
+	"patterns": [
+		{ "include": "#comments" },
+		{ "include": "#entities" },
+		{ "include": "#keywords" },
+		{ "include": "#strings" },
+		{ "include": "#meta" }
+	],
+	"repository": {
+		"comments": {
+			"name": "comment.block.poweron",
+			"begin": "\\[",
+			"end": "\\]"
+		},
+		"entities": {
+			"patterns": [
+				{
+					"name": "entity.name.section.define.poweron",
+					"match": "\\b(DEFINE|define)\\b"
+				},
+				{
+					"name": "entity.name.section.setup.poweron",
+					"match": "\\b(SETUP|setup)\\b"
+				},
+				{
+					"name": "entity.name.section.print.poweron",
+					"match": "\\b(PRINT|print)\\b"
+				},
+				{
+					"name": "entity.name.function.poweron",
+					"match": "\\b(PROCEDURE|procedure)\\b"
+				}
+			]
+		},
+		"keywords": {
+			"patterns": [
+				{
+					"name": "keyword.control.poweron",
+					"match": "\\b(if|IF|while|WHILE|for|FOR|return|RETURN|end|END|do|DO|until|UNTIL)\\b"
+				},
+				{
+					"name": "keyword.operator.arithmetic.poweron",
+					"match": "\\+|-|\\*|\\/"
+				},
+				{
+					"name": "keyword.operator.assignment.poweron",
+					"match": "\\="
+				},
+				{
+					"name": "keyword.operator.scope.poweron",
+					"match": ":"
+				}
+			]
+		},
+		"meta": {
+			"patterns": [
+				{
+					"name": "meta.preprocessor",
+					"match": "#\\w*"
+				}
+			]
+		},
+		"strings": {
+			"name": "string.quoted.double.poweron",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"name": "constant.character.escape.poweron",
+					"match": "\\\\."
+				}
+			]
+		}
+	},
+	"scopeName": "source.poweron"
+}
