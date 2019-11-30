@@ -2,7 +2,13 @@
     "name": "poweron-vsc",
     "displayName": "poweron-vsc",
     "description": "PowerOn language support for Visual Studio Code",
+    "author": "Jeff Grimshaw",
+    "license": "MIT",
     "version": "0.0.1",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/jgrims/poweron-vsc"
+    },
     "engines": {
         "vscode": "^1.40.0"
     },
