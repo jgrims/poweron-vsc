@@ -17,6 +17,8 @@ import {
 	TextDocumentPositionParams
 } from 'vscode-languageserver';
 
+import  { Token, PowerOnLexer }  from './poweronLexer';
+
 // Create a connection for the server. The connection uses Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
 let connection = createConnection(ProposedFeatures.all);
@@ -94,7 +96,7 @@ connection.onDidChangeConfiguration(change => {
 	}
 
 	// Revalidate all open text documents
-	documents.all().forEach(validateTextDocument);
+	documents.all().forEach(validatePowerOn);
 });
 
 function getDocumentSettings(resource: string): Thenable<ExampleSettings> {
@@ -120,15 +122,62 @@ documents.onDidClose(e => {
 // The content of a text document has changed. This event is emitted
 // when the text document first opened or when its content has changed.
 documents.onDidChangeContent(change => {
-	validateTextDocument(change.document);
+	console.debug("one");
+	validatePowerOn(change.document);
 });
 
+async function validatePowerOn(textDocument: TextDocument): Promise<void> {
+	let settings = await getDocumentSettings(textDocument.uri);
+	
+	let lexer = new PowerOnLexer(textDocument.getText());
+
+	let problems = 0;
+	let diagnostics: Diagnostic[] = [];
+
+	let thisToken: Token | null = new Token("", "", 0, 0);
+	while (thisToken !== null && problems < settings.maxNumberOfProblems) {
+		thisToken = lexer.getNextToken();
+		if (thisToken) {
+			problems++;
+			let diagnostic: Diagnostic = {
+				severity: DiagnosticSeverity.Information,
+				range: {
+					start: textDocument.positionAt(thisToken.position),
+					end: textDocument.positionAt(thisToken.position + thisToken.value.length)
+				},
+				message: `This is a ${thisToken.name} at position ${thisToken.position}.`,
+				source: 'poweron-vsc'
+			};
+			if (hasDiagnosticRelatedInformationCapability) {
+				diagnostic.relatedInformation = [
+					{
+						location: {
+							uri: textDocument.uri,
+							range: Object.assign({}, diagnostic.range)
+						},
+						message: `${thisToken.value.length} characters.`
+					}
+				];
+			}
+			diagnostics.push(diagnostic);
+		}
+	}
+	connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
+}
+
+/**
 async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	// In this simple example we get the settings for every validate run.
 	let settings = await getDocumentSettings(textDocument.uri);
 
 	// The validator creates diagnostics for all uppercase words length 2 and more
 	let text = textDocument.getText();
+	let lexer = new PowerOnLexer(text);
+
+	let tokens = lexer.getAllTokens();
+
+	while (lexer.getNextToken() && )
+
 	let pattern = /\b[A-Z]{2,}\b/g;
 	let m: RegExpExecArray | null;
 
@@ -169,6 +218,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
 	// Send the computed diagnostics to VSCode.
 	connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
 }
+*/
 
 connection.onDidChangeWatchedFiles(_change => {
 	// Monitored files have change in VSCode

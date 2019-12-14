@@ -2,22 +2,68 @@
  *   Lexer for PowerOn specfiles.
  */
 
- class Token {
-    constructor(public name: string, public value: string, public position: number) {}
+ export class Token {
+    constructor(public name: string, public value: string, public position: number, public line: number) {}
  }
 
-export default class PowerOnLexer {
+ enum operators {
+    '+'=  'PLUS',
+    '-'=  'MINUS',
+    '*'=  'MULTIPLY',
+    '.'=  'PERIOD',
+    '\\'= 'BACKSLASH',
+    ':'=  'COLON',
+    '%'=  'PERCENT',
+    '|'=  'PIPE',
+    '!'=  'EXCLAMATION',
+    '?'=  'QUESTION',
+    '#'=  'POUND',
+    '&'=  'AMPERSAND',
+    ';'=  'SEMI',
+    ','=  'COMMA',
+    '('=  'L_PAREN',
+    ')'=  'R_PAREN',
+    '<'=  'L_ANG',
+    '>'=  'R_ANG',
+    '{'=  'L_BRACE',
+    '}'=  'R_BRACE',
+    '['=  'L_BRACKET',
+    ']'=  'R_BRACKET',
+    '='=  'EQUALS'
+}
+
+export class PowerOnLexer {
 
     private currentPosition: number;
     private inputBuffer: string;
     private inputLength: number;
+    private currentLine: number;
+
+    
+
 
     constructor(input: string) {
         this.inputBuffer = input;
         this.inputLength = input.length;
         this.currentPosition = 0;
+        this.currentLine = 0;
+    }
+
+    public reset(input: string) {
+        this.inputBuffer = input;
+        this.inputLength = input.length;
+        this.currentPosition = 0;
+        this.currentLine = 0;
     }
     
+    public getAllTokens() {
+        let tokens: Token[] = [];
+        while (true) {
+            let token:Token | null = this.getNextToken();
+            if (token) { tokens.push(token); break; }
+        }
+    }
+
     public getNextToken() {
 
         // Set this.Position to the beginning of the next token or return null if at end of input.
@@ -32,7 +78,7 @@ export default class PowerOnLexer {
         // Handle comments.
         if (thisChar === '[') { 
             let commentStart = this.currentPosition;
-            return new Token( 'COMMENT', this.processComment(), commentStart );
+            return new Token( 'COMMENT', this.processComment(), commentStart, this.currentLine );
         }
 
         // Handle string literals.
@@ -43,21 +89,38 @@ export default class PowerOnLexer {
             if (endPos === -1) {
                 // Did not find the matching quote.
                 this.currentPosition = this.inputLength;
-                return new Token( 'STRING_LITERAL', this.inputBuffer.substr(startPos), startPos );
+                return new Token( 'STRING_LITERAL', this.inputBuffer.substr(startPos), startPos, this.currentLine );
             } else {
                 // Found the matching quote.
                 this.currentPosition = endPos++;
-                return new Token( 'STRING_LITERAL', this.inputBuffer.substr(startPos, endPos), startPos );
+                return new Token( 'STRING_LITERAL', this.inputBuffer.substr(startPos, endPos), startPos, this.currentLine );
             }
         }
 
         // Handle numeric literals.
+        if (thisChar >= '0' && thisChar <= '9') {
+            let startPos = this.currentPosition;
+            while (thisChar >= '0' && thisChar <= '9') {
+                this.currentPosition++;
+                thisChar = this.inputBuffer.charAt(this.currentPosition);
+            }
+            // We're now at the end of the numeric literal.
+            return new Token( 'NUMERIC_LITERAL', this.inputBuffer.substr(startPos, this.currentPosition-1), startPos, this.currentLine );
+        }
 
         // Handle operators.
+        if (this.isOperator(thisChar)) {
+            this.currentPosition++;
+            return new Token( operators[thisChar], thisChar, this.currentPosition-1, this.currentLine );
+        }
 
         // Handle everything else, which is either a keyword or identifier.
-
-        return null;
+        let startPos = this.currentPosition;
+        while (!this.isNotAToken(thisChar)) {
+            this.currentPosition++;
+            thisChar = this.inputBuffer.charAt(this.currentPosition);
+        }
+        return new Token( 'IDENTIFIER', this.inputBuffer.substr(startPos, this.currentPosition-1), startPos, this.currentLine );
     }
 
     /**
@@ -65,7 +128,14 @@ export default class PowerOnLexer {
      * is not part of a token.
      */  
     private isNotAToken(char: any): boolean {
-        return ' \t\r\n'.indexOf(char) === -1;
+        switch (char) {
+            case ' ': 
+            case '\t': 
+            case '\r': 
+            case '\n': 
+                return true;
+        }
+        return false;
     }
 
     /**
@@ -78,12 +148,20 @@ export default class PowerOnLexer {
 
         this.currentPosition++;
         while (nestLevel >= 0 && this.currentPosition < this.inputLength) {
-            if (this.inputBuffer.charAt(this.currentPosition) === '[') { nestLevel++; }
-            if (this.inputBuffer.charAt(this.currentPosition) === ']') { nestLevel--; }
+            switch (this.inputBuffer.charAt(this.currentPosition)) {
+                case '[': { nestLevel++; break; }
+                case ']': { nestLevel--; break; }
+                case '\r': { this.currentLine++; break; }
+                case '\n': { this.currentLine++; break; }
+            }
             this.currentPosition++;
         }
 
         return this.inputBuffer.substring(startPos, this.currentPosition-1);
+    }
+
+    private isOperator(char: string): char is keyof typeof operators {
+        return char in operators;
     }
 
 }
