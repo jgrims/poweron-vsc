@@ -92,8 +92,9 @@ export class PowerOnLexer {
                 return new Token( 'STRING_LITERAL', this.inputBuffer.substr(startPos), startPos, this.currentLine );
             } else {
                 // Found the matching quote.
-                this.currentPosition = endPos++;
-                return new Token( 'STRING_LITERAL', this.inputBuffer.substr(startPos, endPos), startPos, this.currentLine );
+                this.currentPosition = endPos+1;
+                let token = new Token( 'STRING_LITERAL', this.inputBuffer.substr(startPos, endPos - startPos), startPos, this.currentLine );
+                return token;
             }
         }
 
@@ -105,7 +106,7 @@ export class PowerOnLexer {
                 thisChar = this.inputBuffer.charAt(this.currentPosition);
             }
             // We're now at the end of the numeric literal.
-            return new Token( 'NUMERIC_LITERAL', this.inputBuffer.substr(startPos, this.currentPosition-1), startPos, this.currentLine );
+            return new Token( 'NUMERIC_LITERAL', this.inputBuffer.substr(startPos, this.currentPosition - startPos), startPos, this.currentLine );
         }
 
         // Handle operators.
@@ -116,11 +117,11 @@ export class PowerOnLexer {
 
         // Handle everything else, which is either a keyword or identifier.
         let startPos = this.currentPosition;
-        while (!this.isNotAToken(thisChar)) {
+        while (!this.isNotAToken(thisChar) && !this.isOperator(thisChar)) {
             this.currentPosition++;
             thisChar = this.inputBuffer.charAt(this.currentPosition);
         }
-        return new Token( 'IDENTIFIER', this.inputBuffer.substr(startPos, this.currentPosition-1), startPos, this.currentLine );
+        return new Token( 'IDENTIFIER', this.inputBuffer.substr(startPos, this.currentPosition-startPos), startPos, this.currentLine );
     }
 
     /**
