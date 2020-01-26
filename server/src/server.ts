@@ -17,7 +17,10 @@ import {
 	TextDocumentPositionParams
 } from 'vscode-languageserver';
 
-import  { Token, PowerOnLexer }  from './poweronLexer';
+import {
+	Parser,
+	Token 
+ } from './parser';
 
 // Create a connection for the server. The connection uses Node's IPC as a transport.
 // Also include all preview / proposed LSP features.
@@ -129,15 +132,16 @@ documents.onDidChangeContent(change => {
 async function validatePowerOn(textDocument: TextDocument): Promise<void> {
 	let settings = await getDocumentSettings(textDocument.uri);
 	
-	let lexer = new PowerOnLexer(textDocument.getText());
+	let parser = new Parser;
+	let tokens = parser.parse(textDocument.getText());
 
 	let problems = 0;
 	let diagnostics: Diagnostic[] = [];
 
-	let thisToken: Token | null = new Token("", "", 0, 0);
+	let thisToken: Token | null = lexer.getNextToken();
 	while (thisToken !== null && problems < settings.maxNumberOfProblems) {
 		thisToken = lexer.getNextToken();
-		if (thisToken) {
+		if (thisToken?.name == "IDENTIFIER") {
 			problems++;
 			let diagnostic: Diagnostic = {
 				severity: DiagnosticSeverity.Information,
